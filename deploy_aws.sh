@@ -6,7 +6,7 @@ SECURITY_GROUP_NAME="my-security-group"
 VPC_CIDR="10.0.0.0/16"
 SUBNET_CIDR="10.0.1.0/24"
 INSTANCE_TYPE="t2.micro"
-AMI_ID="ami-04a92520784b93e73"  # Remplacez ceci par l'ID de l'AMI Ubuntu
+AMI_ID="ami-0e86e20dae9224db8"  # Remplacez ceci par l'ID de l'AMI Ubuntu
 TAG_NAME="MyUbuntuEC2Instance"
 
 # Étape 1 : Créer une paire de clés SSH
