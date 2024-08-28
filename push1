@@ -1,1 +1,351 @@
 push5
+
+JENKINS_URL/job/ssm-push/build?token=TOKEN_NAME ou /buildWithParameters?token=TOKEN_NAME
+
+OIqiEXg8VLooSsICl0tSfqy+l9LyAYhBBTT1e4WAf2xFfIijyauieQwXuJyHMHq8MKDxNFX/Ol+WLXJpdjQvT6BpFJ/g+j+Q2iWmUtQCKNl3IQYM7yvo6bwuv6AVLWe8lP6Dr+eumF5OILghacQfge9M4cDO6XHrtn2O60/9yno=
+
+1157dfe004dba86e0d452a5a652f05910b
+
+curl -X POST "http://ipv4:8080/job/TEST-DEPLOY-INFRASTRUCTURE/build?token=TOKEN_NAME" --user "admin:1157dfe004dba86e0d452a5a652f05910b
+
+
+# Clone application
+
+```sh
+git clone https://github.com/mtbinds/S-S-M.git
+```
+# Ajout du Webhook sur github
+
+```url
+http://ipv4_ip_address:8080/github-webhook
+```
+- Json
+- Only Push
+
+## Première commande
+
+```sh
+# Commmande pour installer docker
+
+# Add Docker's official GPG key:
+sudo apt-get update && sudo apt-get install ca-certificates curl && sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+```
+## Deuxième commande
+
+```ssh 
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+
+## Commandes pour faire le push sur Github
+
+```sh
+git init
+git add .
+git commit -m "adding project"
+git branch -M main
+git remote add origin projet.git
+git push -u origin main
+```
+# Commandes pour lancer l'application
+
+```sh
+cd Docker-prod
+docker compose up -d
+```
+# Commande d'autorisation
+
+```sh
+sudo usermod -aG docker jenkins
+```
+# Redémarrage du serveur Jenkins
+
+```sh
+sudo systemctl restart jenkins
+```
+# Supprimer les images docker
+
+```sh
+sudo docker image rm -f id_image
+```
+# Supprimer tous les conteneurs
+
+```sh
+sudo docker system prune
+```
+
+# Supprimer docker
+
+```sh
+sudo rm -rf /var/lib/docker
+sudo rm /etc/docker/daemon.json
+sudo rm /etc/default/docker
+```
+# Création d'un infra
+
+```bash
+#!/bin/bash
+
+# Variables
+AMI_ID="ami-0c55b159cbfafe1f0"  # AMI pour Ubuntu 22.04 LTS (peut varier selon la région)
+INSTANCE_TYPE="t2.micro"        # Type d'instance
+KEY_NAME="my-key-pair"          # Remplace par le nom de ta clé SSH existante
+SECURITY_GROUP="my-security-group"  # Remplace par le nom de ton groupe de sécurité
+SUBNET_ID="subnet-xxxxxx"       # Remplace par l'ID de ton subnet
+TAG_NAME="MyUbuntuInstance"     # Nom pour l'instance
+
+# Créer l'instance EC2
+aws ec2 run-instances \
+    --image-id $AMI_ID \
+    --instance-type $INSTANCE_TYPE \
+    --key-name $KEY_NAME \
+    --security-groups $SECURITY_GROUP \
+    --subnet-id $SUBNET_ID \
+    --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$TAG_NAME}]" \
+    --count 1
+
+echo "Instance EC2 lancée avec succès."
+```
+# Lancer la création
+
+```bash
+#!/bin/bash
+
+# Définir les variables pour réutiliser dans le script
+KEY_NAME="my-key-pair"
+SECURITY_GROUP_NAME="my-security-group"
+VPC_CIDR="10.0.0.0/16"
+SUBNET_CIDR="10.0.1.0/24"
+INSTANCE_TYPE="t2.micro"
+AMI_ID="ami-04a92520784b93e73"  # Remplacez ceci par l'ID de l'AMI Ubuntu
+TAG_NAME="MyUbuntuEC2Instance"
+
+# Étape 1 : Créer une paire de clés SSH
+echo "Création de la paire de clés SSH..."
+aws ec2 create-key-pair --key-name $KEY_NAME --query 'KeyMaterial' --output text > $KEY_NAME.pem
+chmod 400 $KEY_NAME.pem
+echo "Paire de clés créée et sauvegardée dans $KEY_NAME.pem"
+
+# Étape 2 : Créer un groupe de sécurité
+echo "Création du groupe de sécurité..."
+SECURITY_GROUP_ID=$(aws ec2 create-security-group --group-name $SECURITY_GROUP_NAME --description "Security group for my EC2 instance" --query 'GroupId' --output text)
+echo "Groupe de sécurité créé avec l'ID $SECURITY_GROUP_ID"
+
+# Étape 3 : Autoriser le trafic SSH et HTTP/HTTPS dans le groupe de sécurité
+echo "Ajout des règles de sécurité au groupe de sécurité..."
+aws ec2 authorize-security-group-ingress --group-id $SECURITY_GROUP_ID --protocol tcp --port 22 --cidr 0.0.0.0/0
+aws ec2 authorize-security-group-ingress --group-id $SECURITY_GROUP_ID --protocol tcp --port 80 --cidr 0.0.0.0/0
+aws ec2 authorize-security-group-ingress --group-id $SECURITY_GROUP_ID --protocol tcp --port 443 --cidr 0.0.0.0/0
+echo "Règles de sécurité ajoutées."
+
+# Étape 4 : (Optionnel) Créer un VPC, sous-réseau, et une passerelle Internet
+echo "Création du VPC..."
+VPC_ID=$(aws ec2 create-vpc --cidr-block $VPC_CIDR --query 'Vpc.VpcId' --output text)
+echo "VPC créé avec l'ID $VPC_ID"
+
+echo "Création du sous-réseau..."
+SUBNET_ID=$(aws ec2 create-subnet --vpc-id $VPC_ID --cidr-block $SUBNET_CIDR --query 'Subnet.SubnetId' --output text)
+echo "Sous-réseau créé avec l'ID $SUBNET_ID"
+
+echo "Création de la passerelle Internet et association au VPC..."
+INTERNET_GATEWAY_ID=$(aws ec2 create-internet-gateway --query 'InternetGateway.InternetGatewayId' --output text)
+aws ec2 attach-internet-gateway --vpc-id $VPC_ID --internet-gateway-id $INTERNET_GATEWAY_ID
+echo "Passerelle Internet créée et attachée avec l'ID $INTERNET_GATEWAY_ID"
+
+echo "Création de la table de routage et association au sous-réseau..."
+ROUTE_TABLE_ID=$(aws ec2 create-route-table --vpc-id $VPC_ID --query 'RouteTable.RouteTableId' --output text)
+aws ec2 create-route --route-table-id $ROUTE_TABLE_ID --destination-cidr-block 0.0.0.0/0 --gateway-id $INTERNET_GATEWAY_ID
+aws ec2 associate-route-table --subnet-id $SUBNET_ID --route-table-id $ROUTE_TABLE_ID
+echo "Table de routage créée et associée au sous-réseau."
+
+# Étape 5 : Lancer l'instance EC2
+echo "Lancement de l'instance EC2..."
+INSTANCE_ID=$(aws ec2 run-instances \
+    --image-id $AMI_ID \
+    --count 1 \
+    --instance-type $INSTANCE_TYPE \
+    --key-name $KEY_NAME \
+    --security-group-ids $SECURITY_GROUP_ID \
+    --subnet-id $SUBNET_ID \
+    --associate-public-ip-address \
+    --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$TAG_NAME}]" \
+    --query 'Instances[0].InstanceId' --output text)
+echo "Instance EC2 Ubuntu lancée avec l'ID $INSTANCE_ID"
+
+# Fin du script
+echo "Script terminé. Votre instance EC2 Ubuntu est en cours de lancement."
+```
+
+# Lancer le build à distance avec curl
+
+```sh
+curl -X POST "http://ipv4_address:8080/job/TEST-DEPLOY-INFRASTRUCTURE/build?token=token" --user "admin:113ccdad79a6a394a94326b5c64eaa28d2 "
+```
+# Exemple de pipeline qu'il fait le même job de script sh 
+
+--> Le but d'utilisation des Pipelines c'est d'organiser les étapes de déploiement
+
+```groovy
+pipeline {
+    agent any
+
+    environment {
+        AWS_REGION = 'eu-west-3' // Remplacez par votre région AWS préférée
+        AWS_DEFAULT_REGION = "${AWS_REGION}"
+    }
+
+    stages {
+        stage('Setup Environment') {
+            steps {
+                script {
+                    // Initialisation des variables (peut être également dans un fichier de configuration)
+                    env.KEY_NAME = "my-key-pair"
+                    env.SECURITY_GROUP_NAME = "my-security-group"
+                    env.VPC_CIDR = "10.0.0.0/16"
+                    env.SUBNET_CIDR = "10.0.1.0/24"
+                    env.INSTANCE_TYPE = "t2.micro"
+                    env.AMI_ID = "ami-04a92520784b93e73"  // Remplacez par l'ID de l'AMI Ubuntu
+                    env.TAG_NAME = "IpssiInstance"
+                }
+            }
+        }
+
+        stage('Create Key Pair') {
+            steps {
+                script {
+                    sh '''
+                        echo "Création de la paire de clés SSH..."
+                        aws ec2 create-key-pair --key-name $KEY_NAME --query 'KeyMaterial' --output text > $KEY_NAME.pem
+                        chmod 400 $KEY_NAME.pem
+                        echo "Paire de clés créée et sauvegardée dans $KEY_NAME.pem"
+                    '''
+                }
+            }
+        }
+
+        stage('Create Security Group') {
+            steps {
+                script {
+                    sh '''
+                        echo "Création du groupe de sécurité..."
+                        SECURITY_GROUP_ID=$(aws ec2 create-security-group --group-name $SECURITY_GROUP_NAME --description "Security group for my EC2 instance" --query 'GroupId' --output text)
+                        echo "Groupe de sécurité créé avec l'ID $SECURITY_GROUP_ID"
+                        echo "SECURITY_GROUP_ID=$SECURITY_GROUP_ID" > security-group-id.txt
+                    '''
+                }
+            }
+        }
+
+        stage('Authorize Security Group Rules') {
+            steps {
+                script {
+                    sh '''
+                        SECURITY_GROUP_ID=$(cat security-group-id.txt | grep SECURITY_GROUP_ID | cut -d '=' -f2)
+                        echo "Ajout des règles de sécurité au groupe de sécurité..."
+                        aws ec2 authorize-security-group-ingress --group-id $SECURITY_GROUP_ID --protocol tcp --port 22 --cidr 0.0.0.0/0
+                        aws ec2 authorize-security-group-ingress --group-id $SECURITY_GROUP_ID --protocol tcp --port 80 --cidr 0.0.0.0/0
+                        aws ec2 authorize-security-group-ingress --group-id $SECURITY_GROUP_ID --protocol tcp --port 443 --cidr 0.0.0.0/0
+                        echo "Règles de sécurité ajoutées."
+                    '''
+                }
+            }
+        }
+
+        stage('Create VPC') {
+            steps {
+                script {
+                    sh '''
+                        echo "Création du VPC..."
+                        VPC_ID=$(aws ec2 create-vpc --cidr-block $VPC_CIDR --query 'Vpc.VpcId' --output text)
+                        echo "VPC créé avec l'ID $VPC_ID"
+                        echo "VPC_ID=$VPC_ID" > vpc-id.txt
+                    '''
+                }
+            }
+        }
+
+        stage('Create Subnet') {
+            steps {
+                script {
+                    sh '''
+                        VPC_ID=$(cat vpc-id.txt | grep VPC_ID | cut -d '=' -f2)
+                        echo "Création du sous-réseau..."
+                        SUBNET_ID=$(aws ec2 create-subnet --vpc-id $VPC_ID --cidr-block $SUBNET_CIDR --query 'Subnet.SubnetId' --output text)
+                        echo "Sous-réseau créé avec l'ID $SUBNET_ID"
+                        echo "SUBNET_ID=$SUBNET_ID" > subnet-id.txt
+                    '''
+                }
+            }
+        }
+
+        stage('Create and Attach Internet Gateway') {
+            steps {
+                script {
+                    sh '''
+                        VPC_ID=$(cat vpc-id.txt | grep VPC_ID | cut -d '=' -f2)
+                        echo "Création de la passerelle Internet et association au VPC..."
+                        INTERNET_GATEWAY_ID=$(aws ec2 create-internet-gateway --query 'InternetGateway.InternetGatewayId' --output text)
+                        aws ec2 attach-internet-gateway --vpc-id $VPC_ID --internet-gateway-id $INTERNET_GATEWAY_ID
+                        echo "Passerelle Internet créée et attachée avec l'ID $INTERNET_GATEWAY_ID"
+                        echo "INTERNET_GATEWAY_ID=$INTERNET_GATEWAY_ID" > internet-gateway-id.txt
+                    '''
+                }
+            }
+        }
+
+        stage('Create and Associate Route Table') {
+            steps {
+                script {
+                    sh '''
+                        VPC_ID=$(cat vpc-id.txt | grep VPC_ID | cut -d '=' -f2)
+                        SUBNET_ID=$(cat subnet-id.txt | grep SUBNET_ID | cut -d '=' -f2)
+                        INTERNET_GATEWAY_ID=$(cat internet-gateway-id.txt | grep INTERNET_GATEWAY_ID | cut -d '=' -f2)
+                        echo "Création de la table de routage et association au sous-réseau..."
+                        ROUTE_TABLE_ID=$(aws ec2 create-route-table --vpc-id $VPC_ID --query 'RouteTable.RouteTableId' --output text)
+                        aws ec2 create-route --route-table-id $ROUTE_TABLE_ID --destination-cidr-block 0.0.0.0/0 --gateway-id $INTERNET_GATEWAY_ID
+                        aws ec2 associate-route-table --subnet-id $SUBNET_ID --route-table-id $ROUTE_TABLE_ID
+                        echo "Table de routage créée et associée au sous-réseau."
+                    '''
+                }
+            }
+        }
+
+        stage('Launch EC2 Instance') {
+            steps {
+                script {
+                    sh '''
+                        SUBNET_ID=$(cat subnet-id.txt | grep SUBNET_ID | cut -d '=' -f2)
+                        SECURITY_GROUP_ID=$(cat security-group-id.txt | grep SECURITY_GROUP_ID | cut -d '=' -f2)
+                        echo "Lancement de l'instance EC2..."
+                        INSTANCE_ID=$(aws ec2 run-instances \
+                            --image-id $AMI_ID \
+                            --count 1 \
+                            --instance-type $INSTANCE_TYPE \
+                            --key-name $KEY_NAME \
+                            --security-group-ids $SECURITY_GROUP_ID \
+                            --subnet-id $SUBNET_ID \
+                            --associate-public-ip-address \
+                            --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$TAG_NAME}]" \
+                            --query 'Instances[0].InstanceId' --output text)
+                        echo "Instance EC2 Ubuntu lancée avec l'ID $INSTANCE_ID"
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline terminé'
+        }
+    }
+}
+```
