@@ -1,0 +1,20 @@
+- name: Manage S3 Bucket
+  hosts: localhost
+  gather_facts: no
+  tasks:
+  - name: Create an S3 bucket
+    community.aws.s3_bucket:
+      name: my-new-bucket
+      state: present
+      region: us-east-1
+      acl: private
+      versioning:
+        status: Enabled
+      tags:
+        Environment: Dev
+        Owner: Admin
+    register: result
+
+  - name: Debug the result
+    debug:
+      var: result
