@@ -1,0 +1,16 @@
+- name: Delete EC2 instance
+  hosts: localhost
+  gather_facts: no
+  connection: local
+  
+  tasks:
+    - name: Terminate EC2 instance
+      amazon.aws.ec2_instance:
+        region: us-east-1
+        instance_ids: "{{ INSTANCE_ID }}"
+        state: absent
+      register: termination_result
+
+    - name: Display termination result
+      debug:
+        msg: "{{ termination_result }}"
