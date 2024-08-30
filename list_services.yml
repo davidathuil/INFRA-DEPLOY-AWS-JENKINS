@@ -1,6 +1,9 @@
 - name: List AWS Resources
   hosts: localhost
   gather_facts: no
+  vars:
+    region: us-east-1
+
   tasks:
   - name: List EC2 instances
     amazon.aws.ec2_instance_info:
