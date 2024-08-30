@@ -1,26 +1,35 @@
-- name: Manage RDS Instance
+
+- name: "Create RDS instance"
   hosts: localhost
-  gather_facts: no
-  connection: local
+  vars:
+    ALLOCATED_STORAGE: 10
+    DB_ENGINE: "mariadb"
+    DB_ID: "CFI-validator-db"
+    DB_AWS_REGION: "eu-west-3"
+# hardening control variables
+    STOARGE_ENCRYPTED: "true"
+    MASTER_USERNAME: "aws_user"
+    MASTER_USER_PASSWORD: "db_password"
+    
   tasks:
-  - name: Create an RDS instance
+  - name: Create a new DB instance in RDS/AWS in the default VPC
     community.aws.rds_instance:
-      db_instance_identifier: mydbinstance
-      db_instance_class: db.t2.micro
-      engine: mysql
-      engine_version: 8.0
-      master_username: admin
-      master_user_password: mysecurepassword
-      allocated_storage: 20
-      db_name: mydatabase
-      backup_retention_period: 7
-      multi_az: no
-      publicly_accessible: yes
-      region: us-east-1
       state: present
-      tags:
-        Environment: Dev
-        Owner: Admin
-    register: result
-
-
+      db_instance_class: db.t3.medium
+# playbook variables
+      aws_region: "{{ DB_AWS_REGION }}"
+      id: "{{ DB_ID }}"
+      engine: "{{ DB_ENGINE }}"
+      allocated_storage: "{{ ALLOCATED_STORAGE }}"
+# playbook runtime environment variables
+      master_username: "{{ MASTER_USERNAME }}"
+      master_user_password: "{{ MASTER_USER_PASSWORD }}"
+# Hardening controls
+      storage_encrypted: "{{ STOARGE_ENCRYPTED }}"
+      enable_iam_database_authentication: true
+ 
+    register: dbdetails
+ 
+  - name: Print the details of the database
+    debug:
+      var: dbdetails
