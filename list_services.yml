@@ -1,6 +1,6 @@
 - name: List AWS Resources
   hosts: localhost
-  beciome: true
+  become: true
 
   vars:
     region: us-east-1
