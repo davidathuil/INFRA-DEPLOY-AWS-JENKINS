@@ -1,0 +1,34 @@
+- name: Create EC2 instance from CSV file
+  hosts: localhost
+  gather_facts: no
+
+  vars:
+    csv_file: "ec2_config.csv"
+
+  tasks:
+  - name: Install Python dependencies
+    pip:
+      name:
+      - pandas
+
+  - name: Read CSV file
+    community.general.read_csv:
+      path: "{{ csv_file }}"
+      key: "InstanceName"
+    register: ec2_config
+
+  - name: Launch EC2 instance
+    amazon.aws.ec2_instance:
+      name: "{{ ec2_config.dict['MyInstance']['InstanceName'] }}"
+      instance_type: "{{ ec2_config.dict['MyInstance']['InstanceType'] }}"
+      region: "{{ ec2_config.dict['MyInstance']['Region'] }}"
+      image_id: "{{ ec2_config.dict['MyInstance']['AMI_ID'] }}"
+      key_name: "{{ ec2_config.dict['MyInstance']['KeyName'] }}"
+      vpc_subnet_id: "{{ ec2_config.dict['MyInstance']['SubnetID'] }}"
+      security_group: "{{ ec2_config.dict['MyInstance']['SecurityGroup'] }}"
+      wait: yes
+    register: ec2
+
+  - name: Print EC2 instance details
+    debug:
+      msg: "{{ ec2 }}"
