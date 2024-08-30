@@ -1,4 +1,4 @@
-push5
+push7
 
 JENKINS_URL/job/ssm-push/build?token=TOKEN_NAME ou /buildWithParameters?token=TOKEN_NAME
 
