@@ -1,0 +1,21 @@
+- name: Detach EBS volume
+  hosts: localhost
+  gather_facts: no
+  connection: local
+  
+  vars:
+    volume_id: "vol-00774eed596f436a4"  # ID du volume EBS à détacher
+    instance_id: "i-00168991dd64c31bb"  # ID de l'instance EC2
+
+  tasks:
+    - name: Detach EBS volume from instance
+      amazon.aws.ec2_vol:
+        region: us-east-1
+        volume_id: "{{ volume_id }}"
+        instance_id: "{{ instance_id }}"
+        state: detached
+      register: detach_result
+
+    - name: Display detach result
+      debug:
+        msg: "{{ detach_result }}"
