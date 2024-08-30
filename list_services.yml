@@ -1,7 +1,5 @@
 - name: List AWS Resources
   hosts: localhost
-  gather_facts: no
-  become: yes
   vars:
     region: us-east-1
 
