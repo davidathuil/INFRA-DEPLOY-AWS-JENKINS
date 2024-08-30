@@ -1,0 +1,30 @@
+- name: List AWS Resources
+  hosts: localhost
+  gather_facts: no
+  tasks:
+  - name: List EC2 instances
+    amazon.aws.ec2_instance_info:
+      region: "{{ region }}"
+    register: ec2_instances
+
+  - name: Print EC2 instances
+    debug:
+      msg: "{{ ec2_instances.instances }}"
+
+  - name: List S3 buckets
+    amazon.aws.s3_bucket_info:
+      region: "{{ region }}"
+    register: s3_buckets
+
+  - name: Print S3 buckets
+    debug:
+      msg: "{{ s3_buckets.buckets }}"
+
+  - name: List security groups
+    amazon.aws.ec2_security_group_info:
+      region: "{{ region }}"
+    register: security_groups
+
+  - name: Print security groups
+    debug:
+      msg: "{{ security_groups.security_groups }}"

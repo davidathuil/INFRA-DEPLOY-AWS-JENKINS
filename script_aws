@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Variables
+aws_credentials_content="your_aws_access_key_id=your_access_key\naws_secret_access_key=your_secret_key"
+aws_config_content="[default]\nregion=us-east-1\noutput=json"
+jenkins_home="/var/lib/jenkins"
+
+# Configure AWS CLI for Jenkins
+echo "Configuring AWS CLI for Jenkins..."
+echo -e "\n\n\n" | sudo -u jenkins aws configure
+
+# Write to AWS credentials file
+echo -e "$aws_credentials_content" | sudo -u jenkins tee $jenkins_home/.aws/credentials > /dev/null
+
+# Write to AWS config file
+echo -e "$aws_config_content" | sudo -u jenkins tee $jenkins_home/.aws/config > /dev/null
+
+# Set correct permissions
+sudo chown jenkins:jenkins $jenkins_home/.aws/credentials
+sudo chown jenkins:jenkins $jenkins_home/.aws/config
+
+echo "AWS configuration completed."

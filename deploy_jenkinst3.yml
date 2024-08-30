@@ -1,0 +1,113 @@
+- name: Launch EC2 t3.medium with EBS 50GB and execute setup script
+  hosts: localhost
+  gather_facts: false
+  connection: local
+
+  vars:
+    instance_type: t3.medium
+    key_name: my-ec2-key
+    security_group: ansible-security-group
+    region: us-east-1
+    ebs_volume_size: 50
+    ami: ami-0e86e20dae9224db8
+    setup_script: |
+      #!/bin/bash
+      sudo apt update
+      sudo apt install -y fontconfig openjdk-17-jre
+      sudo wget -O /usr/share/keyrings/jenkins-keyring.asc https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+      echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/" | sudo tee /etc/apt/sources.list.d/jenkins.list > /dev/null
+      sudo apt-get update
+      sudo apt-get install -y jenkins unzip
+      curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+      unzip awscliv2.zip
+      sudo ./aws/install
+      sudo apt install -y python3-boto3 python3-botocore
+      sudo apt install -y ansible
+      sudo usermod -aG sudo jenkins
+      # Optionally, add more commands here
+
+  tasks:
+  - name: Create EC2 key pair
+    amazon.aws.ec2_key:
+      name: "{{ key_name }}"
+      region: "{{ region }}"
+      state: present
+    register: ec2_key
+
+  - name: create KMS key
+    amazon.aws.kms_key:
+      description: "KMS key for encrypting EBS volumes"
+      region: "{{ region }}"
+      key_usage: "ENCRYPT_DECRYPT"
+      enable_key_rotation: true
+      alias: "alias/ansible-kms-key"
+      state: present
+      tags:
+        Name: "My KMS Key"
+    register: kms_key
+
+  - name: Display the key pair
+    debug:
+      msg: "The KMS Key ID is {{ kms_key.key_id }}"
+
+  - name: Create security group
+    amazon.aws.ec2_security_group:
+      name: "{{ security_group }}"
+      description: "Security group for Ansible-managed EC2 instances"
+      region: "{{ region }}"
+      rules:
+      - proto: tcp
+        from_port: 22
+        to_port: 22
+        cidr_ip: "0.0.0.0/0"
+      - proto: tcp
+        from_port: 80
+        to_port: 80
+        cidr_ip: "0.0.0.0/0"
+      - proto: tcp
+        from_port: 443
+        to_port: 443
+        cidr_ip: "0.0.0.0/0"
+      - proto: tcp
+        from_port: 8080
+        to_port: 8080
+        cidr_ip: "0.0.0.0/0"
+      rules_egress:
+      - from_port: 0
+        to_port: 0
+        proto: all
+        cidr_ip: "0.0.0.0/0"
+      state: present
+    register: sg
+
+  - name: Launch EC2 instance with 50GB EBS and setup script
+    amazon.aws.ec2_instance:
+      name: Ansible-Managed-EC2
+      key_name: "{{ key_name }}"
+      security_groups:
+      - "{{ sg.group_id }}"
+      instance_type: "{{ instance_type }}"
+      image_id: "{{ ami }}"
+      region: "{{ region }}"
+      ebs_optimized: true
+      wait: yes
+      user_data: "{{ setup_script | to_nice_yaml }}"
+      tags:
+        Name: Ansible-Managed-EC2
+    register: ec2_instance
+
+  - name: Display the instance ID
+    debug:
+      msg: "The instance ID is {{ ec2_instance.instances[0].instance_id }}"
+
+  - name: Create EBS volume
+    amazon.aws.ec2_vol:
+      name: first-volume
+      volume_size: 50
+      volume_type: gp3
+      region: us-east-1
+      instance: "{{ ec2_instance.instances[0].instance_id }}"
+      device_name: /dev/sda2
+      encrypted: true
+      kms_key_id: "{{ kms_key.key_id }}"
+    register: ebs_volume
