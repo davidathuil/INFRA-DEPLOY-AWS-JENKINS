@@ -11,7 +11,7 @@ pipeline {
         stage('Run Ansible Playbook') {
             steps {
                 ansiblePlaybook(
-                    playbook: '/etc/ansible/create_instance.yml',
+                    playbook: 'create_instance.yml',
                     inventory: 'localhost',
                     extras: '--private-key=/etc/ansible/key1.pem'
                 )

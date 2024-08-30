@@ -7,7 +7,7 @@
 
   tasks:
   - name: Install Python dependencies
-    pip:
+    pip3:
       name:
       - pandas
 
