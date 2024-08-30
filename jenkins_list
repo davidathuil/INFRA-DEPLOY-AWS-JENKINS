@@ -1,0 +1,36 @@
+pipeline {
+    agent any
+
+    environment {
+        ANSIBLE_PLAYBOOK_PATH = 'list_services.yml'
+        AWS_REGION = 'us-east-1'
+        GIT_REPO = 'https://github.com/davidathuil/INFRA-DEPLOY-AWS-JENKINS.git'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Cloner le repository Git
+                git branch: 'main', url: "${GIT_REPO}"
+            }
+        }
+        stage('Run Ansible Playbook') {
+            steps {
+                // Exécuter le playbook Ansible
+                ansiblePlaybook(
+                    playbook: "${ANSIBLE_PLAYBOOK_PATH}",
+                    inventory: 'localhost,',
+                    extras: '--private-key=/etc/ansible/key1.pem'
+ 
+                )
+            }
+        }
+    }
+    
+    post {
+        always {
+            // Nettoyage ou actions supplémentaires après l'exécution
+            echo 'Pipeline execution complete.'
+        }
+    }
+}
