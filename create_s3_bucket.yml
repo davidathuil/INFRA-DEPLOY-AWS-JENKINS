@@ -8,7 +8,7 @@
       amazon.aws.s3_bucket:
         name: my-new-bucket
         state: present
-        region: us-east-1
+        region: us-east-2
         acl: private
         tags:
           Environment: Dev
