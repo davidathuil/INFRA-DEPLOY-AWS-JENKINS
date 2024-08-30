@@ -1,16 +1,12 @@
 - name: Create EC2 instance from CSV file
   hosts: localhost
+  become: true
   gather_facts: no
 
   vars:
     csv_file: "ec2_config.csv"
 
   tasks:
-  - name: Install pandas with pip3
-    ansible.builtin.pip:
-      name: pandas
-      executable: pip3
-
   - name: Read CSV file
     community.general.read_csv:
       path: "{{ csv_file }}"
@@ -28,5 +24,3 @@
       security_group: "{{ ec2_config.dict['MyInstance']['SecurityGroup'] }}"
       wait: yes
     register: ec2
-
-

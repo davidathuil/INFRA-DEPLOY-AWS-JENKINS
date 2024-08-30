@@ -1,2 +1,2 @@
 InstanceName,InstanceType,Region,AMI_ID,KeyName,SecurityGroup,SubnetID
-MyInstance,t2.micro,us-east-1,ami-0abcdef1234567890,my-ec2-key,my-security-group,subnet-0abc123456def
+MyInstance,t2.micro,us-east-1,ami-0e86e20dae9224db8,key1,ansible-security-group,subnet-0e8d5f1c36ffdfa18
