@@ -2,9 +2,11 @@
   hosts: localhost
   gather_facts: no
   tasks:
+
   - name: Create an S3 bucket
     community.aws.s3_bucket:
-      name: my-new-bucket
+      name: mybucket
+      region: us-east-1
       state: present
       region: us-east-1
       acl: private
