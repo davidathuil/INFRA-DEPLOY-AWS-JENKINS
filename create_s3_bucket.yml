@@ -5,7 +5,7 @@
   
   tasks:
     - name: Create an S3 bucket
-      community.aws.s3_bucket:
+      amazon.aws.s3_bucket:
         name: my-new-bucket
         state: present
         region: us-east-1
