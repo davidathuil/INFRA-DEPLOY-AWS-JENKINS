@@ -1,6 +1,8 @@
 - name: Update EC2 instance
   hosts: localhost
   gather_facts: no
+  connection: local
+  
   tasks:
   - name: Update EC2 instance type and tags
     amazon.aws.ec2_instance:
