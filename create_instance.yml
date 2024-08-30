@@ -13,8 +13,8 @@
 
   - name: Read CSV file
     community.general.read_csv:
-    path: "{{ csv_file }}"
-    key: "InstanceName"
+      path: "{{ csv_file }}"
+      key: "InstanceName"
     register: ec2_config
 
   - name: Create EC2 instance
@@ -28,4 +28,5 @@
       security_group: "{{ ec2_config.dict['MyInstance']['SecurityGroup'] }}"
       wait: yes
     register: ec2
+
 
