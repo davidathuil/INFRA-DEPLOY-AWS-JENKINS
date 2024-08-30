@@ -8,7 +8,6 @@
       name: mybucket
       region: us-east-1
       state: present
-      region: us-east-1
       acl: private
       versioning:
         status: Enabled
