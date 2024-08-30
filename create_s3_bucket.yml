@@ -1,20 +1,20 @@
-- name: Manage S3 Bucket
-  hosts: localhost
-  connection: local
-  gather_facts: no
-  
-  tasks:
-    - name: Create an S3 bucket
-      amazon.aws.s3_bucket:
-        name: my-new-bucket
-        state: present
-        region: eu-west-1
-        acl: private
-        tags:
-          Environment: Dev
-          Owner: Admin
-      register: result
+ - name:  provisioning S3 Bucket using Ansible playbook
+   hosts: localhost
+   connection: local
+   gather_facts: False
+   tags: provisioning
 
-    - name: Debug the result
-      debug:
-        var: result
+   tasks:
+     - name: create S3 bucket
+       s3_bucket:
+         name: myansibles3bucket312
+         state: present
+         region: us-east-1
+         versioning: yes
+         tags:
+           name: myansiblebuckettpfinal
+           type: example
+       register: s3_url
+
+     - name: Display s3 url
+       debug: var=s3_url
