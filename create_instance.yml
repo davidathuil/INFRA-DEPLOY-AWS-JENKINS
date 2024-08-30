@@ -6,10 +6,10 @@
     csv_file: "ec2_config.csv"
 
   tasks:
-  - name: Install Python dependencies
-    pip3:
-      name:
-      - pandas
+    - name: Install pandas with pip3
+      ansible.builtin.pip:
+        name: pandas
+        executable: pip3
 
   - name: Read CSV file
     community.general.read_csv:
