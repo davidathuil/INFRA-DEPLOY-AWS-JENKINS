@@ -1,6 +1,7 @@
 - name: Manage RDS Instance
   hosts: localhost
   gather_facts: no
+  connection: local
   tasks:
   - name: Create an RDS instance
     community.aws.rds_instance:
