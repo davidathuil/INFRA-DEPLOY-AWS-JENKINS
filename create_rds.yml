@@ -22,6 +22,4 @@
         Owner: Admin
     register: result
 
-  - name: Debug the result
-    debug:
-      var: result
+
