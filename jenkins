@@ -1,7 +1,7 @@
 pipeline {
   agent any
   parameters {
-    choice(name: 'ACTION', choices: ['S3', 'Create'], description: 'Select action')
+    choice(name: 'ACTION', choices: ['S3', 'Create','Update','delete','list'], description: 'Select action')
     string(name: 'INSTANCE_ID', defaultValue: '', description: 'Instance ID for termination')
     
   }
@@ -11,6 +11,11 @@ pipeline {
         git branch: 'main', url: 'https://github.com/davidathuil/INFRA-DEPLOY-AWS-JENKINS.git'
       }
     }
+
+     ansiblePlaybook(
+                    playbook: "${ANSIBLE_PLAYBOOK_PATH}",
+                    inventory: 'localhost,',
+                    extras: '--private-key=/etc/ansible/key1.pem'
 
     stage('Execute Ansible') {
       steps {

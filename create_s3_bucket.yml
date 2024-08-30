@@ -10,8 +10,6 @@
         state: present
         region: us-east-1
         acl: private
-        versioning:
-          status: Enabled
         tags:
           Environment: Dev
           Owner: Admin
