@@ -11,8 +11,8 @@
     - name: Detach EBS volume from instance
       amazon.aws.ec2_vol:
         region: us-east-1
-        volume_id: "{{ volume_id }}"
-        instance_id: "{{ instance_id }}"
+        instance: None
+        id: "{{ volume_id }}"
         state: absent
       register: detach_result
 
