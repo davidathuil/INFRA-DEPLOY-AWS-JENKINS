@@ -1,36 +1,73 @@
 pipeline {
-    agent any
-
-    environment {
-        ANSIBLE_PLAYBOOK_PATH = 'list_services.yml'
-        AWS_REGION = 'us-east-1'
-        GIT_REPO = 'https://github.com/davidathuil/INFRA-DEPLOY-AWS-JENKINS.git'
+  agent any
+  parameters {
+    choice(name: 'ACTION', choices: ['List', 'S3','rds','Create', 'Update', 'Delete'], description: 'Select action')
+    string(name: 'INSTANCE_ID', defaultValue: '', description: 'Instance ID for termination')
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        git branch: 'main', url: 'https://github.com/davidathuil/INFRA-DEPLOY-AWS-JENKINS.git'
+      }
     }
 
-    stages {
-        stage('Checkout') {
-            steps {
-                // Cloner le repository Git
-                git branch: 'main', url: "${GIT_REPO}"
-            }
+    stage('Execute Action') {
+      steps {
+        script {
+          // Determine the action to take
+          switch (params.ACTION) {
+            case 'S3':
+              // Execute Ansible playbook for S3
+              ansiblePlaybook(
+                playbook: 'create_s3_bucket.yml',
+                inventory: 'localhost,',
+                extras: '--private-key=/etc/ansible/key1.pem'
+              )
+              break
+            case 'rds':
+              // Execute Ansible playbook for S3
+              ansiblePlaybook(
+                playbook: 'create_rds.yml',
+                inventory: 'localhost,',
+                extras: '--private-key=/etc/ansible/key1.pem'
+              )
+              break
+                            
+            case 'Create':
+              // Trigger the 'create' Jenkins job
+              build job: 'create'
+              break
+            case 'Update':
+              // Execute Ansible playbook for Update
+              ansiblePlaybook(
+                playbook: 'update_ec2.yml',
+                inventory: 'localhost,',
+                extraVars: [INSTANCE_ID: params.INSTANCE_ID],
+                extras: '--private-key=/etc/ansible/key1.pem'
+              )
+              break
+            case 'Delete':
+              // Execute Ansible playbook for Delete
+              ansiblePlaybook(
+                playbook: 'delete.yml',
+                inventory: 'localhost,',
+                extraVars: [INSTANCE_ID: params.INSTANCE_ID],
+                extras: '--private-key=/etc/ansible/key1.pem'
+              )
+              break
+            case 'List':
+              // Execute Ansible playbook for List
+              ansiblePlaybook(
+                playbook: 'list_services.yml',
+                inventory: 'localhost,',
+                extras: '--private-key=/etc/ansible/key1.pem'
+              )
+              break
+            default:
+              error "Invalid action selected. Please choose either 'S3', 'Create', 'Update', 'Delete', or 'List'."
+          }
         }
-        stage('Run Ansible Playbook') {
-            steps {
-                // Exécuter le playbook Ansible
-                ansiblePlaybook(
-                    playbook: "${ANSIBLE_PLAYBOOK_PATH}",
-                    inventory: 'localhost,',
-                    extras: '--private-key=/etc/ansible/key1.pem'
- 
-                )
-            }
-        }
+      }
     }
-    
-    post {
-        always {
-            // Nettoyage ou actions supplémentaires après l'exécution
-            echo 'Pipeline execution complete.'
-        }
-    }
+  }
 }

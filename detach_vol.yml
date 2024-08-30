@@ -13,7 +13,7 @@
         region: us-east-1
         volume_id: "{{ volume_id }}"
         instance_id: "{{ instance_id }}"
-        state: detached
+        state: absent
       register: detach_result
 
     - name: Display detach result
