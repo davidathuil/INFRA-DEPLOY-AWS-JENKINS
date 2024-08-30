@@ -1,6 +1,5 @@
 - name: Create EC2 instance from CSV file
   hosts: localhost
-  become: true
   gather_facts: no
 
   vars:
