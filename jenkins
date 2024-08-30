@@ -1,0 +1,30 @@
+pipeline {
+  agent any
+  parameters {
+    choice(name: 'ACTION', choices: ['S3', 'Create'], description: 'Select action')
+    string(name: 'INSTANCE_ID', defaultValue: '', description: 'Instance ID for termination')
+    
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        git branch: 'main', url: 'https://github.com/davidathuil/INFRA-DEPLOY-AWS-JENKINS.git'
+      }
+    }
+
+    stage('Execute Ansible') {
+      steps {
+        script {
+          if (params.ACTION == 'S3') {
+             ansiblePlaybook playbook: '/etc/ansible/s3c.yml', inventory: 'localhost'
+            
+          } else if (params.ACTION == 'Create') {
+            ansiblePlaybook playbook: '/etc/ansible/ec2_create.yml', inventory: 'localhost', extraVars: [instance_id: params.INSTANCE_ID]
+          } else {
+            error "Invalid action selected. Please choose either 'Create' or 'Terminate'."
+        }
+      }
+    }
+  }
+  }
+}
