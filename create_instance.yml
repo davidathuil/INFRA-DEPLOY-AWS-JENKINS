@@ -6,19 +6,19 @@
     csv_file: "ec2_config.csv"
 
   tasks:
-    - name: Install pandas with pip3
-      ansible.builtin.pip:
-        name: pandas
-        executable: pip3
+  - name: Install pandas with pip3
+    ansible.builtin.pip:
+      name: pandas
+      executable: pip3
 
   - name: Read CSV file
     community.general.read_csv:
-      path: "{{ csv_file }}"
-      key: "InstanceName"
+    path: "{{ csv_file }}"
+    key: "InstanceName"
     register: ec2_config
 
-  - name: Launch EC2 instance
-    amazon.aws.ec2_instance:
+  - name: Create EC2 instance
+    community.aws.ec2_instance:
       name: "{{ ec2_config.dict['MyInstance']['InstanceName'] }}"
       instance_type: "{{ ec2_config.dict['MyInstance']['InstanceType'] }}"
       region: "{{ ec2_config.dict['MyInstance']['Region'] }}"
@@ -29,6 +29,3 @@
       wait: yes
     register: ec2
 
-  - name: Print EC2 instance details
-    debug:
-      msg: "{{ ec2 }}"
