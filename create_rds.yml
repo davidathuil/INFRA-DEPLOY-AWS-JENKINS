@@ -1,6 +1,7 @@
 
 - name: "Create RDS instance"
   hosts: localhost
+  connection: local
   vars:
     ALLOCATED_STORAGE: 10
     DB_ENGINE: "mariadb"
