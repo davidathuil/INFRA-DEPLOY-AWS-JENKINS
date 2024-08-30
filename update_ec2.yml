@@ -5,7 +5,7 @@
   - name: Update EC2 instance type and tags
     amazon.aws.ec2_instance:
       region: us-east-1
-      instance_id: "{{ instance_id }}"
+      instance_ids: "{{ instance_id }}"
       instance_type: t3.medium
       tags:
         Name: UpdatedInstance
